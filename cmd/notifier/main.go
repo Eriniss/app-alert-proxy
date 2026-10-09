@@ -1,30 +1,38 @@
 package main
 
 import (
-	"io"
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
+
+	"github.com/Eriniss/app-alert-proxy/internal/notify"
+	"github.com/Eriniss/app-alert-proxy/internal/source/logto"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
+	signingKey := os.Getenv("LOGTO_SIGNING_KEY")
+	if signingKey == "" {
+		logger.Error("LOGTO_SIGNING_KEY is required")
+		os.Exit(1)
+	}
+
+	loc, err := time.LoadLocation("Asia/Seoul")
+	if err != nil {
+		logger.Error("load location failed", "error", err)
+		os.Exit(1)
+	}
+
+	notifier := notify.NewLogNotifier(logger)
+	logtoHandler := logto.NewHandler(signingKey, notifier, loc, logger)
+
 	mux := http.NewServeMux()
+	mux.HandleFunc("POST /webhook/logto", logtoHandler.Webhook)
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte("ok"))
-	})
-
-	mux.HandleFunc("POST /webhook/logto", func(w http.ResponseWriter, r *http.Request) {
-		body, err := io.ReadAll(http.MaxBytesReader(w, r.Body, 1<<20))
-		if err != nil {
-			logger.Error("read body failed", "error", err)
-			http.Error(w, "bad request", http.StatusBadRequest)
-			return
-		}
-		logger.Info("logto webhook", "headers", r.Header, "body", string(body))
-		w.WriteHeader(http.StatusOK)
 	})
 
 	addr := ":8080"

@@ -1,15 +1,16 @@
 info:
   name: Logto 웹훅 수신
   type: http
+  seq: 1
 
 http:
   method: POST
-  url: http://localhost:8080/webhook/logto
+  url: http://demo.polipixel.link:8080/webhook/logto
   body:
     type: json
     data: |-
       {
-        "key": "data"
+        "key": "this is data test for app-alert-proxy"
       }
   auth: inherit
 

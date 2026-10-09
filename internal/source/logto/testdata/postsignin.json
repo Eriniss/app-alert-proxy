@@ -1,0 +1,35 @@
+{
+  "event": "PostSignIn",
+  "interactionEvent": "SignIn",
+  "createdAt": "2026-10-09T06:12:48.562Z",
+  "sessionId": "fake-session-id",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+  "userId": "fakeuserid01",
+  "userIp": "172.30.0.3",
+  "user": {
+    "id": "fakeuserid01",
+    "username": "fake-admin",
+    "primaryEmail": "fake-admin@example.com",
+    "primaryPhone": null,
+    "name": "Fake Admin",
+    "avatar": "https://example.com/avatar.png",
+    "customData": {
+      "isAlert": "true"
+    },
+    "identities": {},
+    "lastSignInAt": 1791526368550,
+    "createdAt": 1790381604270,
+    "updatedAt": 1791526368548,
+    "profile": {},
+    "applicationId": "fakeapp00001",
+    "cimdClientId": null,
+    "isSuspended": false
+  },
+  "application": {
+    "id": "fakeapp00002",
+    "type": "Traditional",
+    "name": "gitlab-app",
+    "description": null
+  },
+  "hookId": "fakehook00001"
+}
