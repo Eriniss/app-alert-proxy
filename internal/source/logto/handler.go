@@ -57,31 +57,34 @@ func (h *Handler) Webhook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	logger := h.logger.With("user", ev.User.Username, "app", appName(ev))
+
 	// 4. 오래된 요청 거부 (서명된 요청을 그대로 다시 보내는 공격 방지)
 	if age := time.Since(ev.CreatedAt); age > maxEventAge {
-		h.logger.Warn("stale event rejected", "age", age.String(), "remote", r.RemoteAddr)
+		logger.Warn("stale event rejected", "age", age.String(), "remote", r.RemoteAddr)
 		http.Error(w, "unauthorized", http.StatusUnauthorized)
 		return
 	}
 
 	// 5. 알림 대상인지 필터
 	if ev.Event != "PostSignIn" || ev.InteractionEvent != "SignIn" {
-		h.logger.Info("event ignored", "event", ev.Event, "interaction", ev.InteractionEvent)
+		logger.Info("event ignored", "event", ev.Event, "interaction", ev.InteractionEvent)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
+	// CustomData에 isAlert: true가 있을때만 전송
 	if !ev.User.AlertEnabled() {
-		h.logger.Info("alert disabled for user", "user", ev.User.Username)
+		logger.Info("alert disabled for user", "user", ev.User.Username)
 		w.WriteHeader(http.StatusOK)
 		return
 	}
 
 	// 6. 먼저 200을 돌려주고, 전송은 백그라운드에서
 	w.WriteHeader(http.StatusOK)
-	go h.dispatch(ev)
+	go h.dispatch(ev, logger)
 }
 
-func (h *Handler) dispatch(ev SignInEvent) {
+func (h *Handler) dispatch(ev SignInEvent, logger *slog.Logger) {
 	// r.Context()가 아니라 새 context를 쓴다. 요청 context는
 	// 핸들러가 반환되는 순간 취소되어서 전송이 바로 끊긴다.
 	ctx, cancel := context.WithTimeout(context.Background(), sendTimeout)
@@ -89,6 +92,6 @@ func (h *Handler) dispatch(ev SignInEvent) {
 
 	msg := buildMessage(ev, h.loc)
 	if err := h.notifier.Send(ctx, msg); err != nil {
-		h.logger.Error("send notification failed", "error", err, "user", ev.User.Username)
+		logger.Error("send notification failed", "error", err, "user", ev.User.Username)
 	}
 }

@@ -7,6 +7,13 @@ import (
 	"github.com/Eriniss/app-alert-proxy/internal/notify"
 )
 
+func appName(ev SignInEvent) string {
+	if ev.Application != nil && ev.Application.Name != "" {
+		return ev.Application.Name
+	}
+	return "알 수 없음"
+}
+
 func buildMessage(ev SignInEvent, loc *time.Location) notify.Message {
 	app := "알 수 없음"
 	if ev.Application != nil && ev.Application.Name != "" {
